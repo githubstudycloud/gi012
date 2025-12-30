@@ -94,6 +94,16 @@ sudo -n true && echo "免密sudo已启用" || echo "免密sudo未启用"
 
 ### 4. SSH服务安装与配置
 
+**一句话命令** (安装、启动、开机启动):
+```bash
+sudo apt update && sudo apt install -y openssh-server && sudo systemctl start ssh && sudo systemctl enable ssh && echo "SSH安装、启动、开机启动配置完成"
+```
+
+**简化版本** (使用 `--now` 参数同时启动和设置开机启动):
+```bash
+sudo apt update && sudo apt install -y openssh-server && sudo systemctl enable --now ssh && echo "SSH安装并启动成功"
+```
+
 **检测命令**:
 ```bash
 dpkg -l | grep openssh-server && systemctl status ssh --no-pager
@@ -106,11 +116,6 @@ dpkg -l | grep openssh-server && systemctl status ssh --no-pager
 - ✅ 监听端口: 22 (IPv4和IPv6)
 - ✅ 服务启动时间: 2025-12-29 23:22:11 UTC
 - ✅ 当前连接: 已有来自192.168.0.116的活跃连接
-
-**安装命令** (如果未安装):
-```bash
-sudo apt update && sudo apt install -y openssh-server && sudo systemctl enable --now ssh && echo "SSH安装并启动成功"
-```
 
 **常用管理命令**:
 ```bash
@@ -139,23 +144,38 @@ sudo systemctl disable ssh
 
 ## 快速配置脚本
 
-以下是完整的一句话配置命令（需要sudo权限）:
+### 完整一句话命令（设置密码 + 免密sudo + 安装SSH）
 
 ```bash
-# 完整配置 (设置密码 + 免密sudo + 安装SSH)
 echo "ubuntu:12345678" | sudo chpasswd && echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ubuntu && sudo chmod 440 /etc/sudoers.d/ubuntu && sudo apt update && sudo apt install -y openssh-server && sudo systemctl enable --now ssh && echo "所有配置完成" || echo "配置过程中出现错误"
 ```
 
-**分步执行**:
+### 分步执行命令
+
 ```bash
 # 步骤1: 设置密码
-echo "ubuntu:12345678" | sudo chpasswd
+echo "ubuntu:12345678" | sudo chpasswd && echo "✅ 密码设置完成"
 
 # 步骤2: 配置免密sudo
-echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ubuntu && sudo chmod 440 /etc/sudoers.d/ubuntu
+echo "ubuntu ALL=(ALL) NOPASSWD:ALL" | sudo tee /etc/sudoers.d/ubuntu && sudo chmod 440 /etc/sudoers.d/ubuntu && echo "✅ 免密sudo配置完成"
 
-# 步骤3: 安装并启动SSH (如果未安装)
-sudo apt update && sudo apt install -y openssh-server && sudo systemctl enable --now ssh
+# 步骤3: 安装、启动并设置SSH开机启动
+sudo apt update && sudo apt install -y openssh-server && sudo systemctl enable --now ssh && echo "✅ SSH安装并配置完成"
+
+# 步骤4: 验证配置
+echo "=== 配置验证 ===" && sudo -n true && echo "✅ 免密sudo: 已启用" || echo "❌ 免密sudo: 未启用" && systemctl is-active ssh && echo "✅ SSH服务: 运行中" || echo "❌ SSH服务: 未运行" && systemctl is-enabled ssh && echo "✅ SSH开机启动: 已启用" || echo "❌ SSH开机启动: 未启用"
+```
+
+### 单独SSH安装启动命令
+
+如果只需要安装和配置SSH服务：
+
+```bash
+# 完整版（明确每个步骤）
+sudo apt update && sudo apt install -y openssh-server && sudo systemctl start ssh && sudo systemctl enable ssh && echo "SSH安装、启动、开机启动配置完成"
+
+# 简化版（推荐）
+sudo apt update && sudo apt install -y openssh-server && sudo systemctl enable --now ssh && echo "SSH安装并启动成功"
 ```
 
 ---
@@ -238,7 +258,9 @@ sudo -n true && echo "OK" || echo "需要密码"
 |------|------|------|
 | 2025-12-30 | 初始化文档，记录硬件信息 | ✅ |
 | 2025-12-30 | 检测SSH服务状态 | ✅ |
-| 2025-12-30 | 提供密码设置和免密sudo配置方案 | 📝 |
+| 2025-12-30 | 提供密码设置和免密sudo配置方案 | ✅ |
+| 2025-12-30 | 添加SSH安装启动开机启动一句话命令 | ✅ |
+| 2025-12-30 | 优化快速配置脚本，添加验证步骤 | ✅ |
 
 ---
 
