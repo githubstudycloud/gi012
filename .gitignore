@@ -1,6 +1,6 @@
 # 操作文档（不提交到仓库）
-docs/ssh-server-setup.md
-docs/proxy-configuration.md
+docs/*.md
+docs/**/*.md
 
 # 操作日志和临时文件
 *.log
