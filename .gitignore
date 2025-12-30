@@ -1,0 +1,116 @@
+# 操作文档（不提交到仓库）
+docs/ssh-server-setup.md
+docs/proxy-configuration.md
+
+# 操作日志和临时文件
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+
+# 环境配置（可能包含敏感信息）
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.jks
+credentials.json
+
+# 构建产物
+build/
+dist/
+out/
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# 依赖目录
+node_modules/
+vendor/
+.gradle/
+.m2/
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+*.cover
+.coverage
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 备份文件
+*.bak
+*.backup
+*.orig
+
+# 压缩文件
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
+# 操作系统
+.Trash-*/
+$RECYCLE.BIN/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.eggs/
+*.egg-info/
+*.egg
+
+# Node.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Java
+*.class
+.mtj.tmp/
+hs_err_pid*
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# 证书和密钥
+*.crt
+*.cer
+*.der
+*.pfx
+
+# 临时配置脚本
+setup-*.sh
+config-*.sh
