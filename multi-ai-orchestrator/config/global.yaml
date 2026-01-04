@@ -1,0 +1,40 @@
+# Multi-AI Orchestrator 全局配置
+orchestrator:
+  name: multi-ai-orchestrator
+  version: "1.0.0"
+
+# 服务发现
+discovery:
+  auto_register: true
+  scan_interval: 300
+  config_path: ./config/services/
+
+# Token 管理
+token_management:
+  global_daily_limit: 500000
+  warning_threshold: 0.8
+  emergency_reserve: 10000
+  tracking_enabled: true
+  log_path: ./logs/token_usage/
+
+# 路由策略
+routing:
+  default_strategy: capability_match
+  fallback_enabled: true
+  retry_count: 3
+  timeout: 30
+
+# Git 集成
+git:
+  auto_commit: true
+  config_branch: config
+  code_branch: main
+  sync_interval: 300
+
+# 日志
+logging:
+  level: INFO
+  format: json
+  output:
+    - console
+    - file: ./logs/orchestrator.log

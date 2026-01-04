@@ -1,0 +1,52 @@
+# 服务配置示例：Claude Code in Docker
+service:
+  id: S003
+  name: claude-docker
+  type: claude
+  version: "1.0.0"
+  enabled: true
+
+connection:
+  host: localhost
+  port: 9100
+  protocol: docker
+  container: claude-code-worker
+  auth:
+    type: none
+
+capabilities:
+  - code_generation
+  - code_review
+  - refactoring
+  - testing
+  - documentation
+
+specialties:
+  languages:
+    - python
+    - javascript
+    - typescript
+    - go
+    - rust
+  domains:
+    - backend
+    - frontend
+    - devops
+    - testing
+
+security:
+  sandbox: workspace-write
+  allowed_paths:
+    - /workspace
+  forbidden_commands:
+    - rm -rf /
+
+token_budget:
+  daily_limit: 200000
+  per_request_limit: 20000
+  priority: high
+
+health_check:
+  enabled: true
+  interval: 30
+  timeout: 5

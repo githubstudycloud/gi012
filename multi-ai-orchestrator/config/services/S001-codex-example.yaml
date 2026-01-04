@@ -1,0 +1,58 @@
+# 服务配置示例：Codex on Mac Mini
+service:
+  id: S001
+  name: codex-mac-mini
+  type: codex
+  version: "1.0.0"
+  enabled: true
+
+# 连接配置
+connection:
+  host: mac-mini.local
+  port: 22
+  protocol: ssh  # ssh | http | websocket | docker | local
+  auth:
+    type: ssh-key
+    key_path: ~/.ssh/id_rsa
+    user: developer
+
+# 服务能力
+capabilities:
+  - code_generation
+  - debugging
+  - algorithm_design
+  - code_review
+
+# 专长领域
+specialties:
+  languages:
+    - python
+    - javascript
+    - typescript
+  domains:
+    - backend
+    - algorithms
+    - data_processing
+
+# 安全设置
+security:
+  sandbox: read-only
+  allowed_paths:
+    - /workspace
+    - /tmp
+  forbidden_commands:
+    - rm -rf
+    - sudo
+
+# Token 预算
+token_budget:
+  daily_limit: 100000
+  per_request_limit: 10000
+  priority: high
+
+# 健康检查
+health_check:
+  enabled: true
+  interval: 60
+  timeout: 10
+  retry: 3

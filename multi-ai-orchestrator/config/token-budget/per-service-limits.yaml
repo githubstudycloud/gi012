@@ -1,0 +1,24 @@
+# 各服务 Token 预算配置
+S001:
+  daily_limit: 100000
+  per_request_limit: 10000
+  warning_threshold: 0.8
+  priority: high
+
+S002:
+  daily_limit: 80000
+  per_request_limit: 8000
+  warning_threshold: 0.8
+  priority: medium
+
+S003:
+  daily_limit: 200000
+  per_request_limit: 20000
+  warning_threshold: 0.7
+  priority: high
+
+# 全局设置
+_global:
+  total_daily_limit: 500000
+  emergency_reserve: 10000
+  cost_tracking: true

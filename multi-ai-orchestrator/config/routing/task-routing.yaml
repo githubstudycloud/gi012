@@ -1,0 +1,66 @@
+# 任务路由规则配置
+rules:
+  # Python 后端任务 -> Codex 优先
+  - name: python_backend
+    condition:
+      task_type: code_generation
+      language: python
+      domain: backend
+    route_to:
+      - S001  # Codex
+      - S003  # Claude
+    strategy: capability_match
+
+  # 前端 UI 任务 -> Gemini 优先
+  - name: frontend_ui
+    condition:
+      task_type: code_generation
+      language:
+        - javascript
+        - typescript
+      domain: frontend
+    route_to:
+      - S002  # Gemini
+      - S003  # Claude
+    strategy: direct
+
+  # 代码审查 -> Claude (supervisor)
+  - name: code_review
+    condition:
+      task_type: review
+    route_to:
+      - S003  # Claude
+    strategy: direct
+
+  # 算法任务 -> 并行比较
+  - name: algorithm
+    condition:
+      task_type: algorithm
+    route_to:
+      - S001  # Codex
+      - S002  # Gemini
+    strategy: parallel_compare
+
+  # 测试任务 -> Claude
+  - name: testing
+    condition:
+      task_type: testing
+    route_to:
+      - S003
+    strategy: direct
+
+  # 文档任务 -> Gemini
+  - name: documentation
+    condition:
+      task_type: documentation
+    route_to:
+      - S002
+    strategy: direct
+
+# 默认路由（无匹配规则时）
+default:
+  route_to:
+    - S001
+    - S002
+    - S003
+  strategy: round_robin

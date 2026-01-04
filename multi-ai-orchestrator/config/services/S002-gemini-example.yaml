@@ -1,0 +1,46 @@
+# 服务配置示例：Gemini on Linux VM
+service:
+  id: S002
+  name: gemini-linux-vm
+  type: gemini
+  version: "1.0.0"
+  enabled: true
+
+connection:
+  host: linux-vm.local
+  port: 22
+  protocol: ssh
+  auth:
+    type: ssh-key
+    key_path: ~/.ssh/id_rsa
+    user: developer
+
+capabilities:
+  - code_generation
+  - code_review
+  - documentation
+
+specialties:
+  languages:
+    - python
+    - go
+    - rust
+  domains:
+    - frontend
+    - ui_design
+    - documentation
+
+security:
+  sandbox: read-only
+  allowed_paths:
+    - /workspace
+
+token_budget:
+  daily_limit: 80000
+  per_request_limit: 8000
+  priority: medium
+
+health_check:
+  enabled: true
+  interval: 60
+  timeout: 10
