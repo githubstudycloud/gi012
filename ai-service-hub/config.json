@@ -1,0 +1,18 @@
+{
+  "services": [
+    {
+      "id": "001",
+      "name": "Linux Codex",
+      "type": "codex",
+      "host": "192.168.1.100",
+      "port": 22,
+      "protocol": "ssh",
+      "user": "root",
+      "enabled": true,
+      "status": "unknown"
+    }
+  ],
+  "token_budget": {
+    "daily_limit": 500000
+  }
+}

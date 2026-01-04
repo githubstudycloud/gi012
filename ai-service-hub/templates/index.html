@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Service Hub - 多 AI 服务管理中心</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AI Service Hub</h1>
+            <p class="subtitle">多 AI 服务管理中心</p>
+        </header>
+
+        <main>
+            <!-- 服务列表 -->
+            <section class="card">
+                <div class="card-header">
+                    <h2>服务列表</h2>
+                    <button class="btn btn-primary" onclick="showAddModal()">+ 添加服务</button>
+                </div>
+                <div id="services-list" class="services-grid">
+                    <!-- 动态加载 -->
+                </div>
+            </section>
+
+            <!-- Token 使用统计 -->
+            <section class="card">
+                <h2>📊 Token 使用统计</h2>
+                <div id="usage-stats" class="stats-container">
+                    <!-- 动态加载 -->
+                </div>
+            </section>
+
+            <!-- 任务执行 -->
+            <section class="card">
+                <h2>🚀 执行任务</h2>
+                <div class="task-form">
+                    <select id="task-service" class="form-control">
+                        <option value="">选择服务...</option>
+                    </select>
+                    <textarea id="task-input" class="form-control" placeholder="输入任务描述..." rows="3"></textarea>
+                    <button class="btn btn-success" onclick="executeTask()">执行</button>
+                </div>
+                <div id="task-output" class="output-box" style="display:none;">
+                    <h4>执行结果:</h4>
+                    <pre id="output-content"></pre>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 添加/编辑服务模态框 -->
+    <div id="service-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">添加服务</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <form id="service-form" onsubmit="saveService(event)">
+                <input type="hidden" id="service-id">
+
+                <div class="form-group">
+                    <label>服务名称</label>
+                    <input type="text" id="service-name" class="form-control" required placeholder="例如: Linux Codex">
+                </div>
+
+                <div class="form-group">
+                    <label>服务类型</label>
+                    <select id="service-type" class="form-control" required>
+                        <option value="codex">Codex CLI</option>
+                        <option value="gemini">Gemini CLI</option>
+                        <option value="claude">Claude Code</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>连接协议</label>
+                    <select id="service-protocol" class="form-control" onchange="updateHostLabel()">
+                        <option value="ssh">SSH (远程 Linux/Mac)</option>
+                        <option value="docker">Docker 容器</option>
+                        <option value="local">本地</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="host-label">主机地址</label>
+                    <input type="text" id="service-host" class="form-control" required placeholder="192.168.1.100">
+                </div>
+
+                <div class="form-group" id="user-group">
+                    <label>用户名</label>
+                    <input type="text" id="service-user" class="form-control" placeholder="root">
+                </div>
+
+                <div class="form-group" id="port-group">
+                    <label>端口</label>
+                    <input type="number" id="service-port" class="form-control" value="22">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
