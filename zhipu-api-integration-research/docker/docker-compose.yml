@@ -1,0 +1,69 @@
+# 智谱 API AI CLI 工具 Docker Compose 配置
+#
+# 使用方法:
+#   1. 复制 .env.example 为 .env 并设置 API Key
+#   2. docker compose build
+#   3. docker compose run --rm claude-code
+#
+# 注意: 首次构建 gemini-cli 可能需要 5-10 分钟
+
+version: '3.8'
+
+services:
+  # Claude Code 服务
+  claude-code:
+    build:
+      context: ./claude-code
+      dockerfile: Dockerfile
+    image: claude-code-zhipu:latest
+    container_name: claude-code
+    volumes:
+      - ../workspace:/workspace
+      - claude-config:/root/.claude
+    environment:
+      - ANTHROPIC_AUTH_TOKEN=${ZHIPU_API_KEY}
+      - ANTHROPIC_BASE_URL=https://open.bigmodel.cn/api/anthropic
+      - API_TIMEOUT_MS=3000000
+      - CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+
+  # Codex CLI 服务
+  codex-cli:
+    build:
+      context: ./codex-cli
+      dockerfile: Dockerfile
+    image: codex-cli-zhipu:latest
+    container_name: codex-cli
+    volumes:
+      - ../workspace:/workspace
+      - codex-config:/root/.codex
+    environment:
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY}
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+
+  # Gemini CLI 服务（定制版）
+  gemini-cli:
+    build:
+      context: ./gemini-cli
+      dockerfile: Dockerfile
+    image: gemini-cli-zhipu:latest
+    container_name: gemini-cli
+    volumes:
+      - ../workspace:/workspace
+    environment:
+      - OPENROUTER_BASE_URL=https://open.bigmodel.cn/api/coding/paas/v4
+      - OPENROUTER_API_KEY=${ZHIPU_API_KEY}
+    stdin_open: true
+    tty: true
+    working_dir: /workspace
+
+# 持久化卷
+volumes:
+  claude-config:
+    name: claude-code-config
+  codex-config:
+    name: codex-cli-config
