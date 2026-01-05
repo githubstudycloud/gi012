@@ -41,8 +41,28 @@
 - **Gemini CLI**: 需要修改源码中的模型映射逻辑，防止添加 `google/` 前缀
 - **Telemetry 警告**: Gemini CLI 无法连接 Google 遥测服务器，不影响使用
 
-## 详细安装文档
+## 快速开始
 
+### 一键安装脚本
+
+```bash
+# 1. 下载安装脚本
+wget https://raw.githubusercontent.com/githubstudycloud/gi012/main/zhipu-api-integration-research/install-ai-cli.sh
+
+# 2. 编辑脚本，设置你的 API Key
+nano install-ai-cli.sh  # 修改 ZHIPU_API_KEY="YOUR_API_KEY"
+
+# 3. 执行安装
+chmod +x install-ai-cli.sh
+./install-ai-cli.sh
+
+# 4. 加载环境变量
+source ~/.bashrc
+```
+
+### 详细安装文档
+
+- **[完整操作记录（新手推荐）](docs/step-by-step-setup.md)** - 逐步命令，可直接复制执行
 - [Claude Code 安装配置指南](docs/claude-code-setup.md)
 - [Codex CLI 安装配置指南](docs/codex-cli-setup.md)
 - [Gemini CLI 安装配置指南](docs/gemini-cli-setup.md)
