@@ -4,11 +4,58 @@
 
 ## 目录
 
+- [与官方的区别](#与官方的区别)
 - [前置条件](#前置条件)
 - [快速开始](#快速开始)
 - [各工具使用说明](#各工具使用说明)
 - [单独构建镜像](#单独构建镜像)
 - [常见问题](#常见问题)
+
+## 与官方的区别
+
+**重要说明**：这三个 CLI 工具**官方都没有提供 Docker 镜像**，本项目是自建镜像。
+
+### 我们的镜像特点
+
+| 工具 | 官方镜像 | 我们的镜像 |
+|------|---------|-----------|
+| Claude Code | ❌ 无 | ✅ 预配置智谱 API |
+| Codex CLI | ❌ 无 | ✅ 预配置智谱 API + 自动 git init |
+| Gemini CLI | ❌ 无 | ✅ 定制版源码 + 智谱 API |
+
+### 主要改动
+
+1. **Claude Code**
+   - 预设 `ANTHROPIC_BASE_URL` 指向智谱 API
+   - 预设超时时间 3000000ms
+   - 禁用非必要流量
+
+2. **Codex CLI**
+   - 预配置 `config.toml` 使用 `wire_api = "chat"`（智谱不支持 `responses`）
+   - entrypoint.sh 自动初始化 Git 仓库
+   - 默认使用 `model_provider=zhipu` 和 `model=glm-4.7`
+
+3. **Gemini CLI**
+   - 使用 [heartyguy/gemini-cli](https://github.com/heartyguy/gemini-cli) 定制版
+   - 修改模型映射逻辑，GLM 模型不添加 `google/` 前缀
+   - 多阶段构建，从源码编译
+
+### ENTRYPOINT 与 CMD 说明
+
+Docker 中 `ENTRYPOINT` 定义命令，`CMD` 定义默认参数：
+
+```dockerfile
+# 示例：Claude Code
+ENTRYPOINT ["claude"]  # 基础命令
+CMD []                 # 默认参数（空=交互模式）
+```
+
+运行时的行为：
+```bash
+docker compose run --rm claude-code        # 执行: claude（交互模式）
+docker compose run --rm claude-code -p     # 执行: claude -p（管道模式）
+docker compose run --rm claude-code --help # 执行: claude --help
+```
 
 ## 前置条件
 

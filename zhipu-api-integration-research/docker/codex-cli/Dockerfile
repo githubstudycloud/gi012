@@ -38,9 +38,9 @@ RUN git config --global init.defaultBranch main && \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD codex --version || exit 1
 
-# 入口点脚本
+# 入口点脚本 - 自动初始化 git 并启动 codex
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["--help"]
+CMD []

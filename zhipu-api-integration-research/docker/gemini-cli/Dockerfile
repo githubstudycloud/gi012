@@ -46,6 +46,6 @@ ENV OPENROUTER_BASE_URL="https://open.bigmodel.cn/api/coding/paas/v4"
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD node /opt/gemini-cli/packages/cli/dist/index.js --version 2>/dev/null || exit 1
 
-# 入口点
+# 入口点 - 默认使用 glm-4.7 模型，不带参数进入交互模式
 ENTRYPOINT ["node", "/opt/gemini-cli/packages/cli/dist/index.js", "-m", "glm-4.7"]
-CMD ["--help"]
+CMD []

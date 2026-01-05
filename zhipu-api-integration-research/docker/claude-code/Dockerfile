@@ -38,6 +38,6 @@ RUN echo '{\n\
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD claude --version || exit 1
 
-# 入口点
+# 入口点 - 不带参数时进入交互模式
 ENTRYPOINT ["claude"]
-CMD ["--help"]
+CMD []
