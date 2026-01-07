@@ -1,0 +1,14 @@
+# Platform Worker Service Dockerfile
+
+FROM platform-base:latest AS base
+
+# 复制服务代码
+COPY --chown=platform:platform services/platform-worker/ ./services/platform-worker/
+
+# 安装服务依赖
+RUN uv sync --frozen --no-dev
+
+# Worker 不需要暴露端口
+
+# 启动命令
+CMD ["uv", "run", "python", "-m", "platform_worker.main"]

@@ -1,0 +1,15 @@
+# Platform Auth Service Dockerfile
+
+FROM platform-base:latest AS base
+
+# 复制服务代码
+COPY --chown=platform:platform services/platform-auth/ ./services/platform-auth/
+
+# 安装服务依赖
+RUN uv sync --frozen --no-dev
+
+# 暴露端口
+EXPOSE 8001
+
+# 启动命令
+CMD ["uv", "run", "uvicorn", "platform_auth.main:app", "--host", "0.0.0.0", "--port", "8001"]

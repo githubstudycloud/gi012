@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: platform-auth
+  namespace: platform
+  labels:
+    app: platform-auth
+    app.kubernetes.io/name: platform-auth
+    app.kubernetes.io/component: auth-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: platform-auth
+  template:
+    metadata:
+      labels:
+        app: platform-auth
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+    spec:
+      serviceAccountName: platform-auth
+      containers:
+        - name: platform-auth
+          image: platform-auth:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8001
+              name: http
+          env:
+            - name: AUTH_ENVIRONMENT
+              valueFrom:
+                configMapKeyRef:
+                  name: platform-config
+                  key: ENVIRONMENT
+            - name: AUTH_DATABASE_URL
+              value: "postgresql+asyncpg://postgres:$(DATABASE_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/platform_auth"
+            - name: AUTH_REDIS_URL
+              value: "redis://$(REDIS_HOST):$(REDIS_PORT)/1"
+            - name: AUTH_JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: platform-secrets
+                  key: JWT_SECRET_KEY
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: platform-secrets
+                  key: DATABASE_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: platform-config
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: platform-auth
+  namespace: platform
+spec:
+  selector:
+    app: platform-auth
+  ports:
+    - port: 8001
+      targetPort: 8001
+      name: http
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: platform-auth
+  namespace: platform

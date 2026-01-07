@@ -1,0 +1,160 @@
+version: "3.9"
+
+services:
+  # 基础设施
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 可观测性
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    ports:
+      - "16686:16686"  # UI
+      - "4317:4317"    # OTLP gRPC
+      - "4318:4318"    # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  # 应用服务
+  platform-api:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      API_ENVIRONMENT: development
+      API_DEBUG: "true"
+      API_REDIS_URL: redis://redis:6379/0
+      API_AUTH_SERVICE_URL: http://platform-auth:8001
+      API_USER_SERVICE_URL: http://platform-user:8002
+      API_OTLP_ENDPOINT: http://jaeger:4317
+    depends_on:
+      redis:
+        condition: service_healthy
+      platform-auth:
+        condition: service_started
+      platform-user:
+        condition: service_started
+
+  platform-auth:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.auth
+    ports:
+      - "8001:8001"
+    environment:
+      AUTH_ENVIRONMENT: development
+      AUTH_DEBUG: "true"
+      AUTH_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/platform_auth
+      AUTH_REDIS_URL: redis://redis:6379/1
+      AUTH_OTLP_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  platform-user:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.user
+    ports:
+      - "8002:8002"
+    environment:
+      USER_ENVIRONMENT: development
+      USER_DEBUG: "true"
+      USER_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/platform_user
+      USER_REDIS_URL: redis://redis:6379/2
+      USER_OTLP_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  platform-worker:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.worker
+    environment:
+      WORKER_ENVIRONMENT: development
+      WORKER_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/platform
+      WORKER_REDIS_URL: redis://redis:6379/3
+      WORKER_OTLP_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  platform-notification:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.notification
+    ports:
+      - "8003:8003"
+    environment:
+      NOTIFICATION_ENVIRONMENT: development
+      NOTIFICATION_DEBUG: "true"
+      NOTIFICATION_DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/platform_notification
+      NOTIFICATION_REDIS_URL: redis://redis:6379/4
+      NOTIFICATION_OTLP_ENDPOINT: http://jaeger:4317
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: platform-network

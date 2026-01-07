@@ -1,0 +1,15 @@
+# Platform User Service Dockerfile
+
+FROM platform-base:latest AS base
+
+# 复制服务代码
+COPY --chown=platform:platform services/platform-user/ ./services/platform-user/
+
+# 安装服务依赖
+RUN uv sync --frozen --no-dev
+
+# 暴露端口
+EXPOSE 8002
+
+# 启动命令
+CMD ["uv", "run", "uvicorn", "platform_user.main:app", "--host", "0.0.0.0", "--port", "8002"]

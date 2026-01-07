@@ -1,0 +1,15 @@
+# Platform Notification Service Dockerfile
+
+FROM platform-base:latest AS base
+
+# 复制服务代码
+COPY --chown=platform:platform services/platform-notification/ ./services/platform-notification/
+
+# 安装服务依赖
+RUN uv sync --frozen --no-dev
+
+# 暴露端口
+EXPOSE 8003
+
+# 启动命令
+CMD ["uv", "run", "uvicorn", "platform_notification.main:app", "--host", "0.0.0.0", "--port", "8003"]
