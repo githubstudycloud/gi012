@@ -1,0 +1,102 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: platform-gateway
+
+  # 虚拟线程配置 (Spring Boot 4.0)
+  threads:
+    virtual:
+      enabled: true
+
+  cloud:
+    gateway:
+      # 默认过滤器
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+
+      # 路由配置
+      routes:
+        # 认证服务
+        - id: platform-auth
+          uri: lb://platform-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        # 用户服务
+        - id: platform-user
+          uri: lb://platform-user
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+
+        # 业务服务
+        - id: platform-business
+          uri: lb://platform-business
+          predicates:
+            - Path=/api/business/**
+          filters:
+            - StripPrefix=1
+
+        # 文件服务
+        - id: platform-file
+          uri: lb://platform-file
+          predicates:
+            - Path=/api/files/**
+          filters:
+            - StripPrefix=1
+
+        # 消息服务
+        - id: platform-message
+          uri: lb://platform-message
+          predicates:
+            - Path=/api/messages/**
+          filters:
+            - StripPrefix=1
+
+  # Redis 配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+          min-idle: 5
+          max-wait: 3000ms
+
+# 平台配置
+platform:
+  jwt:
+    secret: ${JWT_SECRET:PlatformEnterpriseSecretKeyForJWTTokenGeneration2026}
+    expiration: 86400000
+    refresh-expiration: 604800000
+    issuer: platform-enterprise
+
+# Actuator 配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: when_authorized
+    gateway:
+      enabled: true
+
+# 日志配置
+logging:
+  level:
+    com.platform: DEBUG
+    org.springframework.cloud.gateway: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"

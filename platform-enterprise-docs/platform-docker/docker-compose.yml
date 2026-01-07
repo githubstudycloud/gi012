@@ -1,0 +1,314 @@
+version: '3.9'
+
+services:
+  # ==================== 基础设施 ====================
+
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:17-alpine
+    container_name: platform-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: platform
+      POSTGRES_PASSWORD: Platform@2024
+      POSTGRES_DB: platform
+      TZ: Asia/Shanghai
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platform -d platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存
+  redis:
+    image: redis:8-alpine
+    container_name: platform-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass Platform@2024
+    volumes:
+      - redis_data:/data
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "Platform@2024", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO 对象存储
+  minio:
+    image: minio/minio:latest
+    container_name: platform-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: platform
+      MINIO_ROOT_PASSWORD: Platform@2024
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: platform-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: platform
+      RABBITMQ_DEFAULT_PASS: Platform@2024
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+
+  # Nacos 服务发现与配置中心
+  nacos:
+    image: nacos/nacos-server:v2.4.0
+    container_name: platform-nacos
+    restart: unless-stopped
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: postgresql
+      POSTGRESQL_SERVICE_HOST: postgres
+      POSTGRESQL_SERVICE_PORT: 5432
+      POSTGRESQL_SERVICE_DB_NAME: nacos
+      POSTGRESQL_SERVICE_USER: platform
+      POSTGRESQL_SERVICE_PASSWORD: Platform@2024
+      JVM_XMS: 256m
+      JVM_XMX: 512m
+      JVM_XMN: 128m
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # ==================== 后端服务 ====================
+
+  # API 网关
+  platform-gateway:
+    build:
+      context: ../platform-backend/platform-gateway
+      dockerfile: ../../platform-docker/Dockerfile.backend
+    container_name: platform-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      NACOS_SERVER_ADDR: nacos:8848
+      REDIS_HOST: redis
+      REDIS_PASSWORD: Platform@2024
+    depends_on:
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # 认证服务
+  platform-auth:
+    build:
+      context: ../platform-backend/platform-auth
+      dockerfile: ../../platform-docker/Dockerfile.backend
+    container_name: platform-auth
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      NACOS_SERVER_ADDR: nacos:8848
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: Platform@2024
+      REDIS_HOST: redis
+      REDIS_PASSWORD: Platform@2024
+    depends_on:
+      nacos:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9100/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # 用户服务
+  platform-user:
+    build:
+      context: ../platform-backend/platform-user
+      dockerfile: ../../platform-docker/Dockerfile.backend
+    container_name: platform-user
+    restart: unless-stopped
+    ports:
+      - "9200:9200"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      NACOS_SERVER_ADDR: nacos:8848
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: Platform@2024
+      REDIS_HOST: redis
+      REDIS_PASSWORD: Platform@2024
+    depends_on:
+      nacos:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - platform-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # 业务服务
+  platform-business:
+    build:
+      context: ../platform-backend/platform-business
+      dockerfile: ../../platform-docker/Dockerfile.backend
+    container_name: platform-business
+    restart: unless-stopped
+    ports:
+      - "9300:9300"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      NACOS_SERVER_ADDR: nacos:8848
+      POSTGRES_HOST: postgres
+      POSTGRES_PASSWORD: Platform@2024
+      REDIS_HOST: redis
+      REDIS_PASSWORD: Platform@2024
+    depends_on:
+      nacos:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - platform-network
+
+  # 文件服务
+  platform-file:
+    build:
+      context: ../platform-backend/platform-file
+      dockerfile: ../../platform-docker/Dockerfile.backend
+    container_name: platform-file
+    restart: unless-stopped
+    ports:
+      - "9400:9400"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      NACOS_SERVER_ADDR: nacos:8848
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: platform
+      MINIO_SECRET_KEY: Platform@2024
+    depends_on:
+      nacos:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - platform-network
+
+  # 消息服务
+  platform-message:
+    build:
+      context: ../platform-backend/platform-message
+      dockerfile: ../../platform-docker/Dockerfile.backend
+    container_name: platform-message
+    restart: unless-stopped
+    ports:
+      - "9500:9500"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      NACOS_SERVER_ADDR: nacos:8848
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USERNAME: platform
+      RABBITMQ_PASSWORD: Platform@2024
+    depends_on:
+      nacos:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - platform-network
+
+  # ==================== 前端服务 ====================
+
+  platform-ui:
+    build:
+      context: ../platform-ui
+      dockerfile: ../platform-docker/Dockerfile.frontend
+    container_name: platform-ui
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - platform-gateway
+    networks:
+      - platform-network
+
+# ==================== 网络 ====================
+networks:
+  platform-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ==================== 数据卷 ====================
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  rabbitmq_data:
