@@ -193,8 +193,7 @@ BEGIN
         p_records_to_delete AS records_to_delete,
         p_records_deleted AS records_deleted,
         CASE WHEN p_dry_run = 1 THEN '测试模式' ELSE '已执行' END AS execution_mode,
-        CASE WHEN p_use_temp_table = 1 THEN '临时表' ELSE v_staging_table END AS staging_table_type
-    AS summary;
+        CASE WHEN p_use_temp_table = 1 THEN '临时表' ELSE v_staging_table END AS staging_table_type;
 
 END$$
 
