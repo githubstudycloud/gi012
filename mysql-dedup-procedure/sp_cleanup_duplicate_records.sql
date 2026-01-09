@@ -198,6 +198,28 @@ BEGIN
 END$$
 
 -- ============================================================================
+-- 简化版：无OUT参数，方便其他存储过程直接调用
+-- ============================================================================
+DROP PROCEDURE IF EXISTS sp_cleanup_duplicate_records_simple$$
+
+CREATE PROCEDURE sp_cleanup_duplicate_records_simple(
+    IN p_table_name VARCHAR(128),
+    IN p_pk_field1 VARCHAR(128),
+    IN p_pk_field2 VARCHAR(128),
+    IN p_date_field VARCHAR(128),
+    IN p_use_temp_table TINYINT,
+    IN p_staging_table VARCHAR(128),
+    IN p_dry_run TINYINT
+)
+BEGIN
+    CALL sp_cleanup_duplicate_records(
+        p_table_name, p_pk_field1, p_pk_field2, p_date_field,
+        p_use_temp_table, p_staging_table, p_dry_run,
+        @_dup_groups, @_to_delete, @_deleted
+    );
+END$$
+
+-- ============================================================================
 -- 辅助存储过程：仅获取待删除记录到中间表（供其他存储过程调用）
 -- ============================================================================
 DROP PROCEDURE IF EXISTS sp_get_duplicate_records$$
@@ -251,6 +273,25 @@ BEGIN
 END$$
 
 -- ============================================================================
+-- 简化版：无OUT参数
+-- ============================================================================
+DROP PROCEDURE IF EXISTS sp_get_duplicate_records_simple$$
+
+CREATE PROCEDURE sp_get_duplicate_records_simple(
+    IN p_table_name VARCHAR(128),
+    IN p_pk_field1 VARCHAR(128),
+    IN p_pk_field2 VARCHAR(128),
+    IN p_date_field VARCHAR(128),
+    IN p_staging_table VARCHAR(128)
+)
+BEGIN
+    CALL sp_get_duplicate_records(
+        p_table_name, p_pk_field1, p_pk_field2, p_date_field,
+        p_staging_table, @_record_count
+    );
+END$$
+
+-- ============================================================================
 -- 辅助存储过程：根据中间表删除主表数据
 -- ============================================================================
 DROP PROCEDURE IF EXISTS sp_delete_by_staging$$
@@ -278,6 +319,24 @@ BEGIN
     SET p_deleted_count = ROW_COUNT();
 
     SELECT CONCAT('已从 ', p_table_name, ' 删除 ', p_deleted_count, ' 条记录') AS result;
+END$$
+
+-- ============================================================================
+-- 简化版：无OUT参数
+-- ============================================================================
+DROP PROCEDURE IF EXISTS sp_delete_by_staging_simple$$
+
+CREATE PROCEDURE sp_delete_by_staging_simple(
+    IN p_table_name VARCHAR(128),
+    IN p_pk_field1 VARCHAR(128),
+    IN p_pk_field2 VARCHAR(128),
+    IN p_staging_table VARCHAR(128)
+)
+BEGIN
+    CALL sp_delete_by_staging(
+        p_table_name, p_pk_field1, p_pk_field2,
+        p_staging_table, @_deleted_count
+    );
 END$$
 
 DELIMITER ;
